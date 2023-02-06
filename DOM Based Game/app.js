@@ -1,77 +1,79 @@
-//The main sections
-const section = document.querySelector('section'); 
-const playerLivesCount = document.querySelector ("span"); 
-const playerLives = 3; 
+// Beginning 
 
+const tilesContainer = document.querySelector(".tiles");
+const colors = ["aqua", "aquamarine", "crimson", "blue", "dodgerblue", "gold", "greenyellow", "teal"];
+const colorsPicklist = [...colors, ...colors];
+const tileCount = colorsPicklist.length;
 
-// Linking text 
-playerLivesCount.textContent = playerLives; 
+// Game state
+let revealedCount = 0;
+let activeTile = null;
+let awaitingEndOfMove = false;
 
-//Generate the data 
-const getData = () => [
-    {imgSrc: './images/bicycle.jpeg', name:'bicycle'},
-    {imgSrc: './images/climate-justice.jpeg', name:'bclimate-justice'},
-    {imgSrc: './images/compost.webp', name:'compost'},
-    {imgSrc: './images/electric-car.jpg', name:'electric-car'},
-    {imgSrc: './images/fashion.jpg', name:'fashion'},
-    {imgSrc: './images/kelp.jpeg', name:'kelp'},
-    {imgSrc: './images/plant-based.jpeg', name:'plant-based'},
-    {imgSrc: './images/plastics.jpg', name:'plastics'},
-    {imgSrc: './images/public-transit.jpeg', name:'public-transit'},
-    {imgSrc: './images/recycling.jpg', name:'recycling'},
-    {imgSrc: './images/wind-power.jpeg', name:'wind-power'},
-    {imgSrc: './images/trees.jpeg', name:'trees'},
-    {imgSrc: './images/solar-power.png', name:'solar-power'},
-    {imgSrc: './images/zero-waste.jpeg', name:'zero-waste'},
-    {imgSrc: './images/indigenous-rights.webp', name:'indigenous-rights'},
-    {imgSrc: './images/bicycle.jpeg', name:'bicycle'},
-    {imgSrc: './images/climate-justice.jpeg', name:'bclimate-justice'},
-    {imgSrc: './images/compost.webp', name:'compost'},
-    {imgSrc: './images/electric-car.jpg', name:'electric-car'},
-    {imgSrc: './images/fashion.jpg', name:'fashion'},
-    {imgSrc: './images/kelp.jpeg', name:'kelp'},
-    {imgSrc: './images/plant-based.jpeg', name:'plant-based'},
-    {imgSrc: './images/plastics.jpg', name:'plastics'},
-    {imgSrc: './images/public-transit.jpeg', name:'public-transit'},
-    {imgSrc: './images/recycling.jpg', name:'recycling'},
-    {imgSrc: './images/wind-power.jpeg', name:'wind-power'},
-    {imgSrc: './images/trees.jpeg', name:'trees'},
-    {imgSrc: './images/solar-power.png', name:'solar-power'},
-    {imgSrc: './images/zero-waste.jpeg', name:'zero-waste'},
-    {imgSrc: './images/indigenous-rights.webp', name:'indigenous-rights'},
-]; 
+function buildTile(color) {
+	const element = document.createElement("div");
 
-//Randomize 
-const randomize = () => {
-   const cardData = getData(); 
-   console.log(cardData);
-   cardData.sort( () => Math.random() - 0.5 ); //to randomize an Array
-   return cardData
-};
+	element.classList.add("tile");
+	element.setAttribute("data-color", color);
+	element.setAttribute("data-revealed", "false");
 
-//Card generator function 
+	element.addEventListener("click", () => {
+		const revealed = element.getAttribute("data-revealed");
 
-const cardGenerator = () => {
-    const cardData = randomize();
-    console.log(cardData); 
+		if (
+			awaitingEndOfMove
+			|| revealed === "true"
+			|| element == activeTile
+		) {
+			return;
+		}
 
-    // To generate the HTML with a Loop 
-     cardData.forEach((item) => {
-        const card = document.createElement ("div"); 
-        const face = document.createElement ("img"); 
-        const back = document.createElement ("div");
-        card.classList = "card"; 
-        face.classList = "face"; 
-        back.classList = "back"; 
+		// Reveal this color
+		element.style.backgroundColor = color;
 
-    //attaching info to the cards
-      face.src = item.imgSrc; 
+		if (!activeTile) {
+			activeTile = element;
 
-    // attaching the cards to the section
-     section.appendChild(card); 
-     card.appendChild(face); 
-     card.appendChild (back); 
-     }); 
-};
+			return;
+		}
 
-cardGenerator
+		const colorToMatch = activeTile.getAttribute("data-color");
+
+		if (colorToMatch === color) {
+			element.setAttribute("data-revealed", "true");
+			activeTile.setAttribute("data-revealed", "true");
+
+			activeTile = null;
+			awaitingEndOfMove = false;
+			revealedCount += 2;
+
+			if (revealedCount === tileCount) {
+				alert("You win! Refresh to start again.");
+			}
+
+			return;
+		}
+
+		awaitingEndOfMove = true;
+
+		setTimeout(() => {
+			activeTile.style.backgroundColor = null;
+			element.style.backgroundColor = null;
+
+			awaitingEndOfMove = false;
+			activeTile = null;
+		}, 1000);
+	});
+
+	return element;
+}
+
+// Build up tiles
+for (let i = 0; i < tileCount; i++) {
+	const randomIndex = Math.floor(Math.random() * colorsPicklist.length);
+	const color = colorsPicklist[randomIndex];
+	const tile = buildTile(color);
+
+	colorsPicklist.splice(randomIndex, 1);
+	tilesContainer.appendChild(tile);
+}
